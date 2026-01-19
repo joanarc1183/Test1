@@ -7,24 +7,29 @@ namespace NamaProyek
    {
        static void Main(string[] args)
        {
-            int n = 15;
+            int n = 105;
             for (int i=1; i<=n; i++)
             {
-                if (i % 3 == 0 && i % 5 == 0)
+                string output = "";
+                if (i%3 == 0)
                 {
-                    Console.WriteLine("foobar");
+                    output += "foo";
                 } 
-                else if (i%3 == 0)
+                if (i%5 == 0)
                 {
-                    Console.WriteLine("foo");
+                    output += "bar";
+                }
+                if (i % 7 == 0)
+                {
+                    output += "jazz";
                 } 
-                else if (i%5 == 0)
+                if (output=="")
                 {
-                    Console.WriteLine("bar");
+                    System.Console.WriteLine(i);
                 }
                 else
                 {
-                    Console.WriteLine(i);
+                    System.Console.WriteLine(output);
                 }
             }
             
