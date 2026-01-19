@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Globalization;
 using System.Security.Cryptography.X509Certificates;
+using System.Runtime.CompilerServices;
 
 namespace Classes
 {
@@ -245,6 +247,64 @@ namespace Classes
             System.Console.WriteLine("After: " + s[2]);
             System.Console.WriteLine(s[^2]);                        // last element using Index
             System.Console.WriteLine(string.Join(" ", s[2..]));     // range from index 2 to end, exclusive
+        
+            // Initialization using Primary Constructors
+            // + more flexible than records
+            // + does not automatically expose public properties
+            Person p = new Person("Athanasia", "Joan", "Edna", "Arc");
+            Person p1 = new Person("Athanasia", "Joan", "Edna", "Arc", 22);
+            p.Print();
+            p1.PrintWithAge();
+            // Record usage
+            // + automatically generates public properties
+            // + immutable by default
+            // + well-suited for data models (DTOs)
+            var p3 = new Student("Joan", "Arc");
+            p3.Print();
+
+
+            // Basic static costructor example
+            // Static constructor is NOT called again
+            Test t1 = new Test();
+            Test t2 = new Test();
+            // Accessing a static member triggers the static constructor
+            Console.WriteLine(Test.Counter);
+
+            // Accessing the type triggers static initialization
+            Console.WriteLine("Main started");
+            OrderDemo.Touch();
+
+            // Static class
+            // No object creation is allowed
+            // MathHelper helper = new MathHelper(); // ❌ Compile-time error
+            double value = 5;
+            Console.WriteLine(MathHelper.Square(value)); 
+            Console.WriteLine(MathHelper.Cube(value));   
+            Console.WriteLine(MathHelper.Pi);  
+
+            // Finalizers
+            FileHandler handler = new FileHandler("data.txt");
+            // Removing reference to the object
+            handler = null;
+            // Force garbage collection (for demo purposes only)
+            GC.Collect();
+            GC.WaitForPendingFinalizers();    
+
+            // Partial type PaymentForm 
+            PaymentForm form = new PaymentForm();
+            form.Amount = 500;
+            form.ProcessPayment();      
+
+            // Extended Partial Method (C# 9+)
+            Calculator calc = new Calculator();
+            int result = calc.Multiply(3, 4);
+            Console.WriteLine(result); 
+
+            // nameOf
+            int count = 123;
+            // nameof returns the variable name as a string
+            string name = nameof(count);
+            Console.WriteLine(name); // Output: count
         }
     }
 
@@ -319,4 +379,223 @@ namespace Classes
             return new Fish("Shark", 5);
         }
     }
+
+    // Primary Constructors
+    class Person (string baptismalName, string firstName, string middleName, string lastName)
+    {
+        // Primary constructor parameters (baptismalName, firstName, middleName, lastName)
+        // remain in scope for the entire lifetime of the object
+
+        // Initialized field from primary constructor parameter
+        public readonly string FirstName = firstName;    
+
+        // Propery read-only initialized from a primary constructor parameter
+        public string LastName { get; } = lastName;
+
+        // Masking; the field name is the same as the constructor parameter name
+        public string middleName = middleName; // right side = parameter, left side = field
+
+        // Validation using Field Initializer
+        public string BaptismalName { get; } = baptismalName ?? throw new ArgumentNullException(nameof(baptismalName));
+        
+        // Auto-property set via an additional constructor
+        public int Age { get; }
+
+        // additional Construction
+        // Must invoke the primary constructor using 'this(...)'
+        public Person (string baptismalName, string firstName, string middleName, string lastName, int age) : this(baptismalName, firstName, middleName, lastName)
+        {
+            Age = age;
+        }
+
+        public void Print() => System.Console.WriteLine(BaptismalName+" "+FirstName+" "+middleName+" "+LastName);
+        // uses primary constructor parameters and initialized members
+        public void PrintWithAge() => System.Console.WriteLine(BaptismalName+" "+FirstName+" "+middleName+" "+LastName+" "+Age);
+    }
+    
+    public record Student (string FirstName, string LastName)
+    {   
+        public string FullName => $"{FirstName} {LastName}";
+
+        public void Print()
+        {
+            Console.WriteLine(FullName);
+        }
+    }
+
+    // Basic Static Constructor 
+    class Test
+    {
+        public static int Counter;
+
+        // Static constructor
+        /*
+            ❌ Static constructors cannot have parameters
+                static Sample(int x) { }
+
+            ❌ Static constructors cannot be called explicitly
+                Sample();
+
+            ❌ Only one static constructor is allowed per type
+                static Sample() { }
+                static Sample() { }
+
+            ✅ The only allowed modifiers are unsafe and extern
+        */
+        static Test()
+        {
+            // executes once per type, not per isntance
+            // automatically called by the runtime
+            System.Console.WriteLine("Type Test Initialized");
+
+            Counter = 10;
+        }
+
+        // Instance constructor
+        public Test()
+        {
+            // excutes every time a new object is created
+            System.Console.WriteLine("Instance created");
+        }
+    }
+
+    // Static Constructor and Field Initialization Order
+    class OrderDemo
+    {
+        // Static field initializer #1 (executed first)
+        static int A = InitA();
+
+        // Static field initializer #2 (executed second)
+        static int B = InitB();
+
+        // Static constructor
+        // Runs after all static field initializers
+        static OrderDemo()
+        {
+            Console.WriteLine("Static constructor executed");
+        }
+
+        static int InitA()
+        {
+            Console.WriteLine("Static field A initialized");
+            return 1;
+        }
+
+        static int InitB()
+        {
+            Console.WriteLine("Static field B initialized");
+            return 2;
+        }
+
+        // Static method used only to trigger type initialization
+        public static void Touch() { }
+    }
+
+    // Module Initializer (C# 9+)
+    class ModuleInit
+    {
+        // This method runs ONCE per assembly
+        // It executes when the assembly is first loaded,
+        // before any type is used or Main() is executed.
+        [ModuleInitializer]
+        public static void Init()
+        {
+            Console.WriteLine("Module initialized");
+        }
+    }
+
+    static class MathHelper
+    {
+        // Static field
+        // Shared across the entire application
+        public static double Pi = 3.14159;
+
+        // Static method
+        // Can be called without creating an object
+        public static double Square(double x)
+        {
+            return x * x;
+        }
+
+        // Static method (expression-bodied)
+        public static double Cube(double x) => x * x * x;
+    
+        // ❌ Not allowed
+        // public int Value;           // instance member
+        // public RulesDemo() { }      // instance constructor
+        // public class Child { }      // inheritance
+    }
+
+    class FileHandler
+    {
+        private string fileName;
+
+        // Constructor
+        public FileHandler(string name)
+        {
+            fileName = name;
+            Console.WriteLine($"FileHandler for {fileName} created.");
+        }
+
+        // Finalizer: called automatically by the Garbage Collector
+        // just before the object memory is reclaimed
+        ~FileHandler()
+        {
+            // This code is used to clean up unmanaged resources
+            // (for example: file handles, database connections, etc.)
+            Console.WriteLine($"Finalizer called for {fileName}.");
+        }
+    }
+
+    // Partial Methods (Classic behavior)
+    partial class Logger
+    {
+        // Partial method definition
+        // If not implemented, it will be removed by the compiler
+        partial void LogInternal(string message);
+
+        public void Log(string message)
+        {
+            // Safe to call even if not implemented, Internal call happens here
+            LogInternal(message);
+        }
+    }
+
+    partial class Logger
+    {
+        // Partial method implementation
+        partial void LogInternal(string message)
+        {
+            Console.WriteLine($"Log: {message}");
+        }
+    }
+
+    // Extended Partial Methods (C# 9+)
+    public partial class Calculator
+    {
+        // Extended partial method
+        // Because it has an access modifier,
+        // an implementation is REQUIRED
+        public partial int Multiply(int x, int y);
+    }
+
+    public partial class Calculator
+    {
+        // Required implementation
+        public partial int Multiply(int x, int y)
+        {
+            return x * y;
+        }
+    }
+
+    // | Feature                  | Classic Partial Method  | Extended Partial Method |
+    // | ------------------------ | ------------------      | ----------------------- |
+    // | Access modifier          | ❌ Not allowed          | ✅ Required            |
+    // | Return type              | `void` only             | Any type                |
+    // | out parameters           | ❌ Not allowed          | ✅ Allowed             |
+    // | Implementation optional  | ✅ Yes                  | ❌ No                  |
+    // | Compiled away if missing | ✅ Yes                  | ❌ No                  |
+
+
+
 }
