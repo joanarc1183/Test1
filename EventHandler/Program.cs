@@ -126,10 +126,10 @@ namespace Event
             this.symbol = symbol;
         }
 
-        // Use built-in EventHandler<TEventArgs>
+        // 2. Event Declaration (using generic EventHandler)
         public event EventHandler<PriceChangedEventArgs> PriceChanged;
 
-        // Protected virtual method to raise the event
+        // 3. Protected Virtual "On" Method
         protected virtual void OnPriceChanged(PriceChangedEventArgs e)
         {
             // Thread-safe invocation
@@ -141,7 +141,8 @@ namespace Event
             get => price;
             set
             {
-                if (price == value) return;
+                if (price == value) return;     // Exit if nothing has changed
+
 
                 decimal oldPrice = price;
                 price = value;
