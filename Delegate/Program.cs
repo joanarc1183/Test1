@@ -11,6 +11,9 @@ namespace Delegate
         {
             // 1. Defining and Using a Delegate
 
+            Transformer tre = x => x*2;
+            System.Console.WriteLine(tre);
+            
             int Square(int x) { return x*x; }
             // Or more concisely with an expression-bodied method:
             // int Square(int x) => x * x;
